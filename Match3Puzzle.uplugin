@@ -1,0 +1,24 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "Match3Puzzle",
+	"Description": "Customizable Match 3 Puzzle Grid, for every platform, hadle Screen space and World space input.",
+	"Category": "Code Plugins",
+	"CreatedBy": "Tyni Boat",
+	"CreatedByURL": "https://bio.Site/YvesEboo",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "tinyboat237@gmail.com",
+	"CanContainContent": true,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "Match3Puzzle",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	]
+}
