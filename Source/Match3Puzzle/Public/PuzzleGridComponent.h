@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "PuzzleGem.h"
+#include "PuzzleLaneComponent.h"
 #include "Components/SceneComponent.h"
 #include "PuzzleStructs.h"
 #include "PuzzleLaneComponent.h"
@@ -144,6 +145,10 @@ protected:
 	UPROPERTY()
 	TArray<FVector2D> _multiPurposePositionBuffer_2;
 	
+	//The history of swapped gems positions.
+	UPROPERTY()
+	TArray<FVector2D> _swapHistory;
+	
 
 #pragma endregion
 
@@ -168,7 +173,7 @@ public:
 
 
 	//get the node pop method when blocked, from grid strategy on init.
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category="Puzzle Grid|Life Time")
 	EGridGemNodePopMethod GetNodePopMethodFromGridStrategy(EGridFillingStrategy strategy, bool& forall);
 
 	//Get the grid time scale.
@@ -176,9 +181,10 @@ public:
 	float GetTimeScale() const;
 
 	//Get the grid time scale.
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category="Puzzle Grid|Life Time")
 	void SetTimeScale(float timeScale);
 
+	
 #pragma endregion
 
 
@@ -319,6 +325,9 @@ public:
 
 	//Handle priorityMatches on the grid. responsible of gem destruction and transformation (LV up) if applicable.
 	void HandleGridMatches(TArray<FVector2D>& exceptionPositions);
+
+	//Update the gem swap history
+	void UpdateSwapHistory(FVector2D gemPosition, bool removeOperation = false);
 	
 #pragma endregion
 	

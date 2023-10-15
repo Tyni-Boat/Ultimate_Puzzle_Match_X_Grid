@@ -25,7 +25,7 @@ public class Match3Puzzle : ModuleRules
 		PublicDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"Core", "ModularController",
+				"Core",
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
@@ -38,6 +38,7 @@ public class Match3Puzzle : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
+				"UMG",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

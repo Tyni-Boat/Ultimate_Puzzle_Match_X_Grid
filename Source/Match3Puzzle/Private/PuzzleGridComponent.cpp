@@ -152,7 +152,6 @@ void UPuzzleGridComponent::SetTimeScale(float timeScale)
 	}
 }
 
-
 #pragma endregion
 
 
@@ -170,7 +169,7 @@ void UPuzzleGridComponent::HandleSwapsOnGrid(FGemSwapHandler newSwap, TArray<FVe
 	//Add the new swap
 	if (newSwap.IsValid())
 	{
-		int activeSwapIndex = _activeSwaps.IndexOfByPredicate([newSwap](FGemSwapHandler innerSwap) -> bool
+		const int activeSwapIndex = _activeSwaps.IndexOfByPredicate([newSwap](FGemSwapHandler innerSwap) -> bool
 		{
 			return innerSwap.GemA == newSwap.GemA || innerSwap.GemB == newSwap.GemA || innerSwap.GemA == newSwap.GemB ||
 				innerSwap.GemB == newSwap.GemB;
@@ -178,6 +177,8 @@ void UPuzzleGridComponent::HandleSwapsOnGrid(FGemSwapHandler newSwap, TArray<FVe
 		if (activeSwapIndex < 0)
 		{
 			_activeSwaps.Add(newSwap);
+			UpdateSwapHistory(newSwap.GemA->GridIndex);
+			UpdateSwapHistory(newSwap.GemB->GridIndex);
 		}
 	}
 
@@ -196,8 +197,8 @@ void UPuzzleGridComponent::HandleSwapsOnGrid(FGemSwapHandler newSwap, TArray<FVe
 			_activeSwaps.RemoveAt(i);
 			continue;
 		}
-		auto NodeA = GetNodeAt(_activeSwaps[i].GemA->GridIndex);
-		auto NodeB = GetNodeAt(_activeSwaps[i].GemB->GridIndex);
+		const auto NodeA = GetNodeAt(_activeSwaps[i].GemA->GridIndex);
+		const auto NodeB = GetNodeAt(_activeSwaps[i].GemB->GridIndex);
 		if (!NodeA || !NodeB)
 		{
 			if (_activeSwaps[i].GemA)
@@ -208,10 +209,9 @@ void UPuzzleGridComponent::HandleSwapsOnGrid(FGemSwapHandler newSwap, TArray<FVe
 			continue;
 		}
 
-		//Hndle Ended Swapes
+		//Handle Ended Swapped
 		if (_activeSwaps[i].swapCompletion >= 1)
 		{
-			//TODO: Handle swap back for user made swaps if no match found
 			_activeSwaps[i].GemA->GemState = falling;
 			_activeSwaps[i].GemB->GemState = falling;
 			NodeA->_movementStartLocation = _activeSwaps[i].GemA->GetActorLocation();
@@ -226,6 +226,8 @@ void UPuzzleGridComponent::HandleSwapsOnGrid(FGemSwapHandler newSwap, TArray<FVe
 			if (!B_match && !A_match && _activeSwaps[i].isUserMadeSwap)
 			{
 				_activeSwaps.Add(FGemSwapHandler(_activeSwaps[i].GemB, _activeSwaps[i].GemA));
+				UpdateSwapHistory(_activeSwaps[i].GemB->GridIndex, true);
+				UpdateSwapHistory(_activeSwaps[i].GemA->GridIndex, true);
 			}
 
 			//Harvest the matching positions
@@ -367,6 +369,7 @@ bool UPuzzleGridComponent::DeleteGem_Internal(APuzzleGem* gem)
 	if (_gemsRecyclerBin.Contains(gem))
 		return false;
 
+	UpdateSwapHistory(gem->GridIndex, true);
 	_gemsRecyclerBin.AddUnique(gem);
 	SetGemAt(gem->GridIndex, nullptr);
 	OnGemDeleted(gem);
@@ -384,9 +387,9 @@ bool UPuzzleGridComponent::DeleteGem_Internal(APuzzleGem* gem)
 bool UPuzzleGridComponent::IsGemPendingDeletion(APuzzleGem* gem)
 {
 	if (!gem)
-		false;
+		return false;
 	if (_gemToBeDestroyed.Num() <= 0)
-		false;
+		return false;
 	return _gemToBeDestroyed.Contains(gem);
 }
 
@@ -561,13 +564,13 @@ bool UPuzzleGridComponent::CheckMatchesInLine(TArray<FVector2D> positions, TArra
 {
 	if (positions.Num() <= 0)
 		return false;
-	int matchesCountOnStart = resultingMatches.Num();
+	const int matchesCountOnStart = resultingMatches.Num();
 	int startMatchIndex = -1;
 	TArray<FVector2D> tempPositionArray;
 	for (int i = 1; i < positions.Num(); i++)
 	{
-		auto last_gem = GetGemAt(positions[i - 1]);
-		auto gem = GetGemAt(positions[i]);
+		const auto last_gem = GetGemAt(positions[i - 1]);
+		const auto gem = GetGemAt(positions[i]);
 
 		//Check last gem could be match
 		if (!last_gem || !last_gem->CanMatchGem())
@@ -578,7 +581,7 @@ bool UPuzzleGridComponent::CheckMatchesInLine(TArray<FVector2D> positions, TArra
 				tempPositionBuffer.Empty();
 				for (int j = startMatchIndex; j < i; j++)
 					tempPositionBuffer.Add(positions[j]);
-				resultingMatches.Add(FGridMatch(tempPositionBuffer));
+				resultingMatches.Add(FGridMatch(tempPositionBuffer, _swapHistory));
 			}
 			startMatchIndex = -1;
 			continue;
@@ -593,7 +596,7 @@ bool UPuzzleGridComponent::CheckMatchesInLine(TArray<FVector2D> positions, TArra
 				tempPositionBuffer.Empty();
 				for (int j = startMatchIndex; j < i; j++)
 					tempPositionBuffer.Add(positions[j]);
-				resultingMatches.Add(FGridMatch(tempPositionBuffer));
+				resultingMatches.Add(FGridMatch(tempPositionBuffer, _swapHistory));
 			}
 			startMatchIndex = -1;
 			continue;
@@ -609,7 +612,7 @@ bool UPuzzleGridComponent::CheckMatchesInLine(TArray<FVector2D> positions, TArra
 				tempPositionBuffer.Empty();
 				for (int j = startMatchIndex; j < i; j++)
 					tempPositionBuffer.Add(positions[j]);
-				resultingMatches.Add(FGridMatch(tempPositionBuffer));
+				resultingMatches.Add(FGridMatch(tempPositionBuffer, _swapHistory));
 			}
 			startMatchIndex = -1;
 			continue;
@@ -624,7 +627,7 @@ bool UPuzzleGridComponent::CheckMatchesInLine(TArray<FVector2D> positions, TArra
 				tempPositionBuffer.Empty();
 				for (int j = startMatchIndex; j < i; j++)
 					tempPositionBuffer.Add(positions[j]);
-				resultingMatches.Add(FGridMatch(tempPositionBuffer));
+				resultingMatches.Add(FGridMatch(tempPositionBuffer, _swapHistory));
 			}
 			startMatchIndex = -1;
 			continue;
@@ -643,7 +646,7 @@ bool UPuzzleGridComponent::CheckMatchesInLine(TArray<FVector2D> positions, TArra
 				tempPositionBuffer.Empty();
 				for (int j = startMatchIndex; j <= i; j++)
 					tempPositionBuffer.Add(positions[j]);
-				resultingMatches.Add(FGridMatch(tempPositionBuffer));
+				resultingMatches.Add(FGridMatch(tempPositionBuffer, _swapHistory));
 			}
 		}
 	}
@@ -659,7 +662,7 @@ void UPuzzleGridComponent::CompactMatchesOnIntersections(TArray<FGridMatch>& res
 
 	//Check intersection matches
 	{
-		int currentLenght = resultingMatches.Num();
+		const int currentLenght = resultingMatches.Num();
 		for (int i = currentLenght - 1; i >= 0; i--)
 		{
 			for (int j = currentLenght - 1; j >= 0; j--)
@@ -690,17 +693,17 @@ bool UPuzzleGridComponent::MergeMatches(FGridMatch& match_A, FGridMatch& match_B
 {
 	if (match_A.IsEmpty() || match_B.IsEmpty())
 		return false;
-	auto intersection = match_A.Intersect(match_B);
+	const auto intersection = match_A.Intersect(match_B);
 	if (intersection.X < 0 || intersection.Y < 0)
 		return false;
-	int index_A = (int)intersection.X;
-	int index_B = (int)intersection.Y;
+	const int index_A = (int)intersection.X;
+	const int index_B = (int)intersection.Y;
 	if (!match_A.MatchPositions.IsValidIndex(index_A))
 		return false;
 	if (!match_B.MatchPositions.IsValidIndex(index_B))
 		return false;
 	result.Clear();
-	auto intersectionPos = match_A.MatchPositions[index_A];
+	const auto intersectionPos = match_A.MatchPositions[index_A];
 	match_A.MatchPositions.RemoveAt(index_A);
 	match_B.MatchPositions.RemoveAt(index_B);
 	for (auto pos : match_A.MatchPositions)
@@ -792,11 +795,11 @@ void UPuzzleGridComponent::HandleGridMatches(TArray<FVector2D>& exceptionPositio
 				continue;
 			for (int i = 0; i < match.MatchPositions.Num(); i++)
 			{
-				auto gem = GetGemAt(match.MatchPositions[i]);
+				const auto gem = GetGemAt(match.MatchPositions[i]);
 				if (!gem)
 					continue;
-				int matchCount = match.MatchPositions.Num();
-				bool intersection = i == (match.MatchPositions.Num() - 1) && matchCount > MinMatchCount;
+				const int matchCount = match.MatchPositions.Num();
+				const bool intersection = i == (match.MatchPositions.Num() - 1) && matchCount > MinMatchCount;
 				if (gem->AvoidDestroyOnGemMatching(matchCount, intersection))
 					continue;
 				DeleteGem(gem);
@@ -806,7 +809,28 @@ void UPuzzleGridComponent::HandleGridMatches(TArray<FVector2D>& exceptionPositio
 }
 
 
+void UPuzzleGridComponent::UpdateSwapHistory(FVector2D gemPosition, bool removeOperation)
+{
+	int indexInHistory = _swapHistory.IndexOfByPredicate([gemPosition](FVector2D historyItem)-> bool
+	{
+		return historyItem == gemPosition;
+	});
+
+	if (!_swapHistory.IsValidIndex(indexInHistory))
+	{
+		if (!removeOperation && gemPosition.X >= 0 && gemPosition.Y >= 0)
+			_swapHistory.Add(gemPosition);
+		return;
+	}
+
+	if (!removeOperation)
+		return;
+
+	_swapHistory.RemoveAt(indexInHistory);
+}
+
 #pragma endregion
+
 
 #pragma region CLass Flow
 
@@ -856,6 +880,11 @@ void UPuzzleGridComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 		{
 			HandleSwapsOnGrid(gemSwap, _swapGridPositionExceptions, DeltaTime);
 			HandleGridMatches(_swapGridPositionExceptions);
+		}
+		break;
+	default:
+		{
+			DeleteGem(gemSwap.GemA);
 		}
 		break;
 	}
