@@ -2,13 +2,13 @@
 	"FileVersion": 3,
 	"Version": 1,
 	"VersionName": "1.0",
-	"FriendlyName": "Match3Puzzle",
-	"Description": "Customizable Match 3 Puzzle Grid, for every platform, hadle Screen space and World space input.",
+	"FriendlyName": "MatchXPuzzle",
+	"Description": "Customizable Candy crush-like Match Puzzle System.",
 	"Category": "Code Plugins",
 	"CreatedBy": "Tyni Boat",
 	"CreatedByURL": "https://bio.Site/YvesEboo",
-	"DocsURL": "",
-	"MarketplaceURL": "",
+	"DocsURL": "https://docs.google.com/document/d/1EICyqgycA2EV1VsE4HWdKFDQzc6oxd96/edit?usp=sharing&ouid=109356153306980654596&rtpof=true&sd=true",
+	"MarketplaceURL": "https://publish.unrealengine.com/v3/edit-product/1e0b1db6dc3144d8833e07739bbd08b4",
 	"SupportURL": "tinyboat237@gmail.com",
 	"CanContainContent": true,
 	"IsBetaVersion": false,
@@ -18,7 +18,11 @@
 		{
 			"Name": "Match3Puzzle",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "Default",
+			"WhitelistPlatforms": [
+				"Win64",
+				"Win32"
+			]
 		}
 	]
 }

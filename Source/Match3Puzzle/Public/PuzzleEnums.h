@@ -1,3 +1,5 @@
+// Copyright © 2023 by Tyni Boat. All Rights Reserved.
+
 #pragma once
 
 #include "CoreMinimal.h"
